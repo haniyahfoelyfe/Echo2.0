@@ -13,3 +13,60 @@
         .chat-container {
             width: 100%;
             max-width: 
+<script>
+    // Replace this with your actual Firebase webhook URL (from Firebase Function)
+    const firebaseWebhookUrl = 'https://<your-project-id>.firebaseapp.com/webhook';  // Replace <your-project-id> with your Firebase project ID
+
+    // Function to send user input to Firebase
+    function sendMessage() {
+        const userInput = document.getElementById('user-input').value;
+
+        if (userInput.trim() === "") {
+            return; // Prevent sending empty messages
+        }
+
+        // Display user message in chat
+        displayMessage(userInput, 'user');
+
+        // Send user input to Firebase (which will forward it to Dialogflow)
+        sendToFirebase(userInput).then(response => {
+            const botResponse = response.fulfillmentText; // Get the bot's response from Dialogflow
+            displayMessage(botResponse, 'bot'); // Display the bot response in the chat
+        });
+
+        // Clear the input field after sending the message
+        document.getElementById('user-input').value = '';
+    }
+
+    // Function to display a message in the chat window
+    function displayMessage(message, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add(sender + '-message');
+        messageElement.textContent = message;
+        document.getElementById('chat-box').appendChild(messageElement);
+
+        // Auto-scroll to the latest message
+        document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+    }
+
+    // Function to send a POST request to Firebase to communicate with Dialogflow
+    async function sendToFirebase(userInput) {
+        const response = await fetch(firebaseWebhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json' // Set the request content type to JSON
+            },
+            body: JSON.stringify({
+                queryInput: {
+                    text: {
+                        text: userInput,  // The message to send to Dialogflow
+                        languageCode: 'en' // Specify the language
+                    }
+                }
+            })
+        });
+
+        // If response from Firebase is successful, return the result
+        if (!response.ok) {
+            console.error('Error sending message to Firebase');
+            re
